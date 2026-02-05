@@ -208,7 +208,7 @@ def checkin(account, domain, BarkKey, BarkServer):
             raise ValueError(f"解析签到响应失败: {str(e)}\n\n原始响应: {response_text}")
 
         # 发送签到结果到 Bark
-        send_message( f'{checkin_result_message}({userinfo['unused']})', BarkKey, BarkServer)
+        send_message( f'{checkin_result_message}({userinfo["unused"]})', BarkKey, BarkServer)
 
         return checkin_result_message
 
