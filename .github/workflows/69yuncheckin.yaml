@@ -24,39 +24,29 @@ jobs:
           pip install requests beautifulsoup4
 
       - name: Run 69yun.py
-        id: run_script  # 添加一个 ID，方便后续步骤引用
+        id: run_script
         env:
           DOMAIN: ${{ secrets.DOMAIN }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-          GMAIL_SENDER_EMAIL: ${{ secrets.GMAIL_SENDER_EMAIL }}
-          GMAIL_SENDER_PASSWORD: ${{ secrets.GMAIL_SENDER_PASSWORD }}
-          GMAIL_RECEIVER_EMAIL: ${{ secrets.GMAIL_RECEIVER_EMAIL }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+          BARK_SERVER: ${{ secrets.BARK_SERVER }}
           USER1: ${{ secrets.USER1 }}
           PASS1: ${{ secrets.PASS1 }}
-          C_EMAIL1: ${{ secrets.C_EMAIL1 }}
           USER2: ${{ secrets.USER2 }}
           PASS2: ${{ secrets.PASS2 }}
-          C_EMAIL2: ${{ secrets.C_EMAIL2 }}
-          # ... 添加更多用户和 C_EMAIL 环境变量
+          # ... 添加更多用户环境变量
         run: python 69yun.py
 
       - name: Backup Run (北京时间 00:05)
         if: ${{ failure() && github.event_name == 'schedule' }}  # 仅在计划任务失败时运行
         env:
           DOMAIN: ${{ secrets.DOMAIN }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-          GMAIL_SENDER_EMAIL: ${{ secrets.GMAIL_SENDER_EMAIL }}
-          GMAIL_SENDER_PASSWORD: ${{ secrets.GMAIL_SENDER_PASSWORD }}
-          GMAIL_RECEIVER_EMAIL: ${{ secrets.GMAIL_RECEIVER_EMAIL }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+          BARK_SERVER: ${{ secrets.BARK_SERVER }}
           USER1: ${{ secrets.USER1 }}
           PASS1: ${{ secrets.PASS1 }}
-          C_EMAIL1: ${{ secrets.C_EMAIL1 }}
           USER2: ${{ secrets.USER2 }}
           PASS2: ${{ secrets.PASS2 }}
-          C_EMAIL2: ${{ secrets.C_EMAIL2 }}
-          # ... 添加更多用户和 C_EMAIL 环境变量
+          # ... 添加更多用户环境变量
         run: |
           echo "Backup run starting..."
           sleep 300  # 等待 5 分钟 (300 秒)
