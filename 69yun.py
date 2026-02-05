@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from datetime import datetime, timedelta
+import urllib.parse
 
 # 配置文件路径
 config_file_path = "config.json"
@@ -38,20 +39,21 @@ def fetch_and_extract_info(session, domain):
 
     # 使用正则表达式提取需要的信息
     user_info = {}
-    user_info['到期时间'] = re.search(r"'Class_Expire': '(.*?)'", chatra_script).group(1) if re.search(r"'Class_Expire': '(.*?)'", chatra_script) else None
-    user_info['剩余流量'] = re.search(r"'Unused_Traffic': '(.*?)'", chatra_script).group(1) if re.search(r"'Unused_Traffic': '(.*?)'", chatra_script) else None
+    user_info['expire'] = re.search(r"'Class_Expire': '(.*?)'", chatra_script).group(1) if re.search(r"'Class_Expire': '(.*?)'", chatra_script) else None
+    user_info['unused'] = re.search(r"'Unused_Traffic': '(.*?)'", chatra_script).group(1) if re.search(r"'Unused_Traffic': '(.*?)'", chatra_script) else None
 
-    # 输出用户信息
-    用户信息 = f"到期时间: {user_info['到期时间']}\n剩余流量: {user_info['剩余流量']}\n"
+    # # 输出用户信息
+    # 用户信息 = f"到期时间: {user_info['到期时间']}\n剩余流量: {user_info['剩余流量']}\n"
 
     # 提取 Clash 订阅链接
     for script in script_tags:
         if 'index.oneclickImport' in str(script) and 'clash' in str(script):
             link = re.search(r"'https://checkhere.top/link/(.*?)\?sub=1'", str(script))
             if link:
-                用户信息 += f"Clash 订阅链接: https://checkhere.top/link/{link.group(1)}?clash=1\nv2ray 订阅链接: https://checkhere.top/link/{link.group(1)}?sub=3\n\n"
+                user_info['clash_link'] = f"https://checkhere.top/link/{link.group(1)}?clash=1"
+                user_info['v2ray_link'] = f"https://checkhere.top/link/{link.group(1)}?sub=3"
                 break
-    return 用户信息
+    return user_info
 
 def generate_config():
     # 获取环境变量
@@ -99,7 +101,7 @@ def send_message(msg="", BarkKey="", BarkServer="https://api.day.app"):
         message_text = f"执行时间: {formatted_time}\n{msg}"
 
         # 构造 Bark 请求 URL
-        url = f"{BarkServer}/{BarkKey}/69云签到/{message_text}"
+        url = f"{BarkServer}/{BarkKey}/{urllib.parse.quote('69云签到')}/{urllib.parse.quote(message_text)}"
 
         try:
             # 发送 GET 请求
@@ -191,13 +193,14 @@ def checkin(account, domain, BarkKey, BarkServer):
             账号信息 = f"地址: {domain}\n账号: {user}\n密码: {pass_}\n"
 
             # 使用 session 获取用户信息
-            用户信息 = fetch_and_extract_info(session, domain)
+            userinfo = fetch_and_extract_info(session, domain)
 
             # 根据返回的结果更新签到信息
             if checkin_result.get('ret') == 1 or checkin_result.get('ret') == 0:
-                checkin_result_message = f"🎉 签到结果 🎉\n {checkin_result.get('msg', '签到成功' if checkin_result['ret'] == 1 else '签到失败')}"
+                # checkin_result_message = f"🎉 签到结果 🎉\n {checkin_result.get('msg', '签到成功' if checkin_result['ret'] == 1 else '签到失败')}"
+                checkin_result_message =checkin_result.get('msg').split('\n')[0] if checkin_result.get('msg') else '签到结果未知'
             else:
-                checkin_result_message = f"🎉 签到结果 🎉\n {checkin_result.get('msg', '签到结果未知')}"
+                checkin_result_message = '签到结果未知'
         except Exception as e:
             # 如果出现解析错误，检查是否由于登录失效
             if "登录" in response_text:
@@ -205,7 +208,7 @@ def checkin(account, domain, BarkKey, BarkServer):
             raise ValueError(f"解析签到响应失败: {str(e)}\n\n原始响应: {response_text}")
 
         # 发送签到结果到 Bark
-        send_message(账号信息 + 用户信息 + checkin_result_message, BarkKey, BarkServer)
+        send_message( f'{checkin_result_message}({userinfo['unused']})', BarkKey, BarkServer)
 
         return checkin_result_message
 
@@ -225,7 +228,7 @@ if __name__ == "__main__":
     domain = config['domain']
     BarkKey = config['BarkKey']
     BarkServer = config['BarkServer']
-
+    print(config)
     # 循环执行每个账号的签到任务
     for i, account in enumerate(config.get("accounts", [])):
         print("----------------------------------签到信息----------------------------------")
